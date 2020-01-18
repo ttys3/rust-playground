@@ -32,6 +32,8 @@ router = "0.6.0"
 openssl-probe = "0.1.2"
 dotenv = "0.15.0"
 snafu = "0.6.0"
+warp = "0.2.0"
+futures = "0.3.1"
 
 [dependencies.playground-middleware]
 git = "https://github.com/integer32llc/playground-middleware"

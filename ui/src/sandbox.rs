@@ -24,7 +24,7 @@ struct CrateInformationInner {
     id: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash)]
 pub struct CrateInformation {
     pub name: String,
     pub version: String,
@@ -38,7 +38,7 @@ impl From<CrateInformationInner> for CrateInformation {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash)]
 pub struct Version {
     pub release: String,
     pub commit_hash: String,
@@ -78,6 +78,78 @@ pub enum Error {
 }
 
 pub type Result<T, E = Error> = ::std::result::Result<T, E>;
+
+use tokio::task;
+
+pub struct AsyncSandbox(Sandbox);
+
+impl AsyncSandbox {
+    pub async fn new() -> Result<Self> {
+        task::spawn_blocking(move || Sandbox::new().map(AsyncSandbox))
+            .await
+            .expect("Unable to run blocking sandbox operation")
+    }
+
+    pub async fn execute(self, r: ExecuteRequest) -> Result<ExecuteResponse> {
+        task::spawn_blocking(move || self.0.execute(&r))
+            .await
+            .expect("Unable to run blocking sandbox operation")
+    }
+
+    pub async fn compile(self, r: CompileRequest) -> Result<CompileResponse> {
+        task::spawn_blocking(move || self.0.compile(&r))
+            .await
+            .expect("Unable to run blocking sandbox operation")
+    }
+
+    pub async fn format(self, r: FormatRequest) -> Result<FormatResponse> {
+        task::spawn_blocking(move || self.0.format(&r))
+            .await
+            .expect("Unable to run blocking sandbox operation")
+    }
+
+    pub async fn clippy(self, r: ClippyRequest) -> Result<ClippyResponse> {
+        task::spawn_blocking(move || self.0.clippy(&r))
+            .await
+            .expect("Unable to run blocking sandbox operation")
+    }
+
+    pub async fn miri(self, r: MiriRequest) -> Result<MiriResponse> {
+        task::spawn_blocking(move || self.0.miri(&r))
+            .await
+            .expect("Unable to run blocking sandbox operation")
+    }
+
+    pub async fn crates(self) -> Result<Vec<CrateInformation>> {
+        task::spawn_blocking(move || self.0.crates())
+            .await
+            .expect("Unable to run blocking sandbox operation")
+    }
+
+    pub async fn version(self, channel: Channel) -> Result<Version> {
+        task::spawn_blocking(move || self.0.version(channel))
+            .await
+            .expect("Unable to run blocking sandbox operation")
+    }
+
+    pub async fn version_rustfmt(self) -> Result<Version> {
+        task::spawn_blocking(move || self.0.version_rustfmt())
+            .await
+            .expect("Unable to run blocking sandbox operation")
+    }
+
+    pub async fn version_clippy(self) -> Result<Version> {
+        task::spawn_blocking(move || self.0.version_clippy())
+            .await
+            .expect("Unable to run blocking sandbox operation")
+    }
+
+    pub async fn version_miri(self) -> Result<Version> {
+        task::spawn_blocking(move || self.0.version_miri())
+            .await
+            .expect("Unable to run blocking sandbox operation")
+    }
+}
 
 pub struct Sandbox {
     #[allow(dead_code)]

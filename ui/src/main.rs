@@ -1,3 +1,4 @@
+#![type_length_limit = "10485760"]
 #![deny(rust_2018_idioms)]
 
 use corsware::{AllowedOrigins, CorsMiddleware, UniCase};
@@ -35,12 +36,15 @@ const DEFAULT_LOG_FILE: &str = "access-log.csv";
 mod asm_cleanup;
 mod gist;
 mod sandbox;
+mod server_warp;
 
 const ONE_HOUR_IN_SECONDS: u32 = 60 * 60;
 const ONE_DAY_IN_SECONDS: u64 = 60 * 60 * 24;
 const ONE_YEAR_IN_SECONDS: u64 = 60 * 60 * 24 * 365;
 
 const SANDBOX_CACHE_TIME_TO_LIVE_IN_SECONDS: u64 = ONE_HOUR_IN_SECONDS as u64;
+const SANDBOX_CACHE_TIME_TO_LIVE: Duration =
+    Duration::from_secs(SANDBOX_CACHE_TIME_TO_LIVE_IN_SECONDS);
 
 fn main() {
     // Dotenv may be unable to load environment variables, but that's ok in production
@@ -50,10 +54,14 @@ fn main() {
 
     let config = ServerConfig::from_environment();
 
-    server_iron(config);
+    if true {
+        server_warp::server_warp(config);
+    } else {
+        server_iron(config);
+    }
 }
 
-struct ServerConfig {
+pub(crate) struct ServerConfig {
     root: PathBuf,
     gh_token: String,
     address: String,
@@ -64,22 +72,42 @@ struct ServerConfig {
 
 impl ServerConfig {
     fn from_environment() -> Self {
-        let root: PathBuf = env::var_os("PLAYGROUND_UI_ROOT").expect("Must specify PLAYGROUND_UI_ROOT").into();
-        let gh_token = env::var("PLAYGROUND_GITHUB_TOKEN").expect("Must specify PLAYGROUND_GITHUB_TOKEN");
+        let root: PathBuf = env::var_os("PLAYGROUND_UI_ROOT")
+            .expect("Must specify PLAYGROUND_UI_ROOT")
+            .into();
+        let gh_token =
+            env::var("PLAYGROUND_GITHUB_TOKEN").expect("Must specify PLAYGROUND_GITHUB_TOKEN");
 
-        let address = env::var("PLAYGROUND_UI_ADDRESS").unwrap_or_else(|_| DEFAULT_ADDRESS.to_string());
-        let port = env::var("PLAYGROUND_UI_PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(DEFAULT_PORT);
-        let logfile = env::var("PLAYGROUND_LOG_FILE").unwrap_or_else(|_| DEFAULT_LOG_FILE.to_string());
+        let address =
+            env::var("PLAYGROUND_UI_ADDRESS").unwrap_or_else(|_| DEFAULT_ADDRESS.to_string());
+        let port = env::var("PLAYGROUND_UI_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(DEFAULT_PORT);
+        let logfile =
+            env::var("PLAYGROUND_LOG_FILE").unwrap_or_else(|_| DEFAULT_LOG_FILE.to_string());
         let cors_enabled = env::var_os("PLAYGROUND_CORS_ENABLED").is_some();
 
         Self {
-            root, gh_token, address, port, logfile, cors_enabled
+            root,
+            gh_token,
+            address,
+            port,
+            logfile,
+            cors_enabled,
         }
     }
 }
 
 fn server_iron(config: ServerConfig) {
-    let ServerConfig { root, gh_token, address, port, logfile, cors_enabled } = config;
+    let ServerConfig {
+        root,
+        gh_token,
+        address,
+        port,
+        logfile,
+        cors_enabled,
+    } = config;
 
     let files = Staticfile::new(&root).expect("Unable to open root directory");
     let mut files = Chain::new(files);
@@ -512,6 +540,20 @@ pub enum Error {
     Interpreting { source: sandbox::Error },
     #[snafu(display("Caching operation failed: {}", source))]
     Caching { source: sandbox::Error },
+    #[snafu(display("Listing crates failed: {}", source))]
+    ListingCrates { source: sandbox::Error },
+    #[snafu(display("Getting the stable version failed: {}", source))]
+    VersionStable { source: sandbox::Error },
+    #[snafu(display("Getting the version for Rustfmt failed: {}", source))]
+    VersionRustfmt { source: sandbox::Error },
+    #[snafu(display("Getting the version for Clippy failed: {}", source))]
+    VersionClippy { source: sandbox::Error },
+    #[snafu(display("Getting the version for Miri failed: {}", source))]
+    VersionMiri { source: sandbox::Error },
+    #[snafu(display("Getting the beta version failed: {}", source))]
+    VersionBeta { source: sandbox::Error },
+    #[snafu(display("Getting the nightly version failed: {}", source))]
+    VersionNightly { source: sandbox::Error },
     #[snafu(display("Unable to serialize response: {}", source))]
     Serialization { source: serde_json::Error },
     #[snafu(display("Unable to deserialize request: {}", source))]
@@ -539,6 +581,8 @@ pub enum Error {
 }
 
 type Result<T, E = Error> = ::std::result::Result<T, E>;
+
+impl warp::reject::Reject for Error {}
 
 const FATAL_ERROR_JSON: &str =
     r#"{"error": "Multiple cascading errors occurred, abandon all hope"}"#;
