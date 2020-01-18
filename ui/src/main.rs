@@ -48,13 +48,38 @@ fn main() {
     openssl_probe::init_ssl_cert_env_vars();
     env_logger::init();
 
-    let root: PathBuf = env::var_os("PLAYGROUND_UI_ROOT").expect("Must specify PLAYGROUND_UI_ROOT").into();
-    let gh_token = env::var("PLAYGROUND_GITHUB_TOKEN").expect("Must specify PLAYGROUND_GITHUB_TOKEN");
+    let config = ServerConfig::from_environment();
 
-    let address = env::var("PLAYGROUND_UI_ADDRESS").unwrap_or_else(|_| DEFAULT_ADDRESS.to_string());
-    let port = env::var("PLAYGROUND_UI_PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(DEFAULT_PORT);
-    let logfile = env::var("PLAYGROUND_LOG_FILE").unwrap_or_else(|_| DEFAULT_LOG_FILE.to_string());
-    let cors_enabled = env::var_os("PLAYGROUND_CORS_ENABLED").is_some();
+    server_iron(config);
+}
+
+struct ServerConfig {
+    root: PathBuf,
+    gh_token: String,
+    address: String,
+    port: u16,
+    logfile: String,
+    cors_enabled: bool,
+}
+
+impl ServerConfig {
+    fn from_environment() -> Self {
+        let root: PathBuf = env::var_os("PLAYGROUND_UI_ROOT").expect("Must specify PLAYGROUND_UI_ROOT").into();
+        let gh_token = env::var("PLAYGROUND_GITHUB_TOKEN").expect("Must specify PLAYGROUND_GITHUB_TOKEN");
+
+        let address = env::var("PLAYGROUND_UI_ADDRESS").unwrap_or_else(|_| DEFAULT_ADDRESS.to_string());
+        let port = env::var("PLAYGROUND_UI_PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(DEFAULT_PORT);
+        let logfile = env::var("PLAYGROUND_LOG_FILE").unwrap_or_else(|_| DEFAULT_LOG_FILE.to_string());
+        let cors_enabled = env::var_os("PLAYGROUND_CORS_ENABLED").is_some();
+
+        Self {
+            root, gh_token, address, port, logfile, cors_enabled
+        }
+    }
+}
+
+fn server_iron(config: ServerConfig) {
+    let ServerConfig { root, gh_token, address, port, logfile, cors_enabled } = config;
 
     let files = Staticfile::new(&root).expect("Unable to open root directory");
     let mut files = Chain::new(files);
