@@ -31,7 +31,7 @@ export interface State {
 }
 
 const DEFAULT: State = {
-  editor: Editor.Advanced,
+  editor: Editor.Ace,
   keybinding: 'ace',
   theme: 'github',
   pairCharacters: PairCharacters.Enabled,

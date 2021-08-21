@@ -44,15 +44,15 @@ const ConfigMenu: React.SFC<ConfigMenuProps> = () => {
   return (
     <Fragment>
       <MenuGroup title="Editor">
-        <EitherConfig
-          id="editor-style"
-          name="Style"
-          a={Editor.Simple}
-          b={Editor.Advanced}
+        <SelectConfig
+          name="Editor"
           value={editorStyle}
-          onChange={changeEditorStyle} />
-
-        {editorStyle === Editor.Advanced && (
+          onChange={changeEditorStyle}
+        >
+          {[Editor.Simple, Editor.Ace, Editor.Monaco]
+            .map(k => <option key={k} value={k}>{k}</option>)}
+        </SelectConfig>
+        {editorStyle === Editor.Ace && (
           <Fragment>
             <SelectConfig
               name="Keybinding"

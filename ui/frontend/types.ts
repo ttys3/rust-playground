@@ -36,7 +36,8 @@ export interface CommonEditorProps {
 
 export enum Editor {
   Simple = 'simple',
-  Advanced = 'advanced',
+  Ace = 'ace',
+  Monaco = 'monaco',
 }
 
 export enum PairCharacters {
