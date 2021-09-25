@@ -17,7 +17,8 @@ import {
 export interface State {
   editor: Editor;
   keybinding: string;
-  theme: string;
+  aceTheme: string;
+  monacoTheme: string;
   pairCharacters: PairCharacters;
   orientation: Orientation;
   assemblyFlavor: AssemblyFlavor;
@@ -33,7 +34,8 @@ export interface State {
 const DEFAULT: State = {
   editor: Editor.Ace,
   keybinding: 'ace',
-  theme: 'github',
+  aceTheme: 'github',
+  monacoTheme: 'vscode-dark-plus',
   pairCharacters: PairCharacters.Enabled,
   orientation: Orientation.Automatic,
   assemblyFlavor: AssemblyFlavor.Att,
@@ -52,8 +54,10 @@ export default function configuration(state = DEFAULT, action: Action): State {
       return { ...state, editor: action.editor };
     case ActionType.ChangeKeybinding:
       return { ...state, keybinding: action.keybinding };
-    case ActionType.ChangeTheme:
-      return { ...state, theme: action.theme };
+    case ActionType.ChangeAceTheme:
+      return { ...state, aceTheme: action.theme };
+    case ActionType.ChangeMonacoTheme:
+      return { ...state, monacoTheme: action.theme };
     case ActionType.ChangePairCharacters:
       return { ...state, pairCharacters: action.pairCharacters };
     case ActionType.ChangeOrientation:

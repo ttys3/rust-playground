@@ -5,7 +5,7 @@
 import State from './state';
 import storage from './storage';
 
-const CURRENT_VERSION = 1;
+const CURRENT_VERSION = 2;
 
 export function serialize(state: State) {
   return JSON.stringify({
@@ -13,7 +13,8 @@ export function serialize(state: State) {
     configuration: {
       editor: state.configuration.editor,
       keybinding: state.configuration.keybinding,
-      theme: state.configuration.theme,
+      aceTheme: state.configuration.aceTheme,
+      monacoTheme: state.configuration.monacoTheme,
       pairCharacters: state.configuration.pairCharacters,
       orientation: state.configuration.orientation,
       assemblyFlavor: state.configuration.assemblyFlavor,
@@ -29,12 +30,23 @@ export function deserialize(savedState) {
   if (!savedState) { return undefined; }
   const parsedState = JSON.parse(savedState);
   if (!parsedState) { return undefined; }
-  if (parsedState.version !== CURRENT_VERSION) { return undefined; }
+  let { version } = parsedState;
+  delete parsedState.version;
+
+  // migrations
+  if (version === 1) {
+    if (parsedState.editor === 'advanced') {
+      parsedState.editor = 'ace';
+    }
+    parsedState.aceTheme = parsedState.theme;
+    parsedState.monacoTheme = 'vscode-dark-plus';
+    delete parsedState.theme;
+    version = 2;
+  }
 
   // This assumes that the keys we serialize with match the keys in the
   // live state. If that's no longer true, an additional renaming step
   // needs to be added.
-  delete parsedState.version;
   return parsedState;
 }
 

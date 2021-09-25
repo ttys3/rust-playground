@@ -472,7 +472,7 @@ interface PropsFromState {
 }
 
 const mapStateToProps = (state: State) => {
-  const { configuration: { theme, keybinding, pairCharacters } } = state;
+  const { configuration: { aceTheme: theme, keybinding, pairCharacters } } = state;
 
   return {
     theme,
