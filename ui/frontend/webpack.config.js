@@ -133,6 +133,7 @@ module.exports = function(_, argv) {
       new CopyPlugin({
         patterns: [
           { from: 'robots.txt', to: '..' },
+          { from: 'node_modules/monaco-editor/min/vs', to: 'vs' }
         ],
       }),
       new MiniCssExtractPlugin({

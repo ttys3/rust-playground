@@ -1,4 +1,6 @@
-export const config = {
+import { languages } from "monaco-editor";
+
+export const config: languages.LanguageConfiguration = {
   comments: {
       lineComment: '//',
       blockComment: ['/*', '*/']
@@ -29,7 +31,7 @@ export const config = {
   }
 };
 
-export const grammar = {
+export const grammar: languages.IMonarchLanguage = {
   // Set defaultToken to invalid to see what you do not tokenize yet
   // defaultToken: 'invalid',
 

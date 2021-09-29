@@ -1,6 +1,6 @@
 import React from 'react';
-import { CommonEditorProps, Position } from '../types';
-import MonacoReact, { Monaco } from "@monaco-editor/react";
+import { CommonEditorProps } from '../types';
+import MonacoReact, { Monaco, loader } from "@monaco-editor/react";
 import { connect } from 'react-redux';
 import State from '../state';
 
@@ -13,6 +13,7 @@ const initMonaco = (monaco: Monaco) => {
   monaco.editor.defineTheme('vscode-dark-plus', {
     base: 'vs-dark',
     inherit: true,
+    colors: {},
     rules: [
       { token: 'keyword.control', foreground: 'C586C0' },
       { token: 'variable', foreground: '9CDCFE' },
@@ -40,6 +41,8 @@ const mapStateToProps = (state: State) => {
 
 
 type MonacoEditorProps = CommonEditorProps & PropsFromState;
+
+loader.config({ paths: { vs: '/assets/vs' } });
 
 const MonacoEditor: React.SFC<MonacoEditorProps> = props => {
   return (
