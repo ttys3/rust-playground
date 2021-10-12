@@ -5,6 +5,7 @@ const HtmlPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CompressionPlugin = require("compression-webpack-plugin");
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 const glob = require('glob');
 const basename = require('basename');
 
@@ -133,12 +134,15 @@ module.exports = function(_, argv) {
       new CopyPlugin({
         patterns: [
           { from: 'robots.txt', to: '..' },
-          { from: 'node_modules/monaco-editor/min/vs', to: 'vs' }
+//          { from: 'node_modules/monaco-editor/min/vs', to: 'vs' }
         ],
       }),
       new MiniCssExtractPlugin({
         filename: `${filenameTemplate}.css`,
         chunkFilename: `${filenameTemplate}.css`,
+      }),
+      new MonacoWebpackPlugin({
+        languages: ['rust'],
       }),
       ...(isProduction ? [new CompressionPlugin()] : []),
     ],
