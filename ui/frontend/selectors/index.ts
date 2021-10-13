@@ -298,6 +298,10 @@ export const orientation = createSelector(
 
 const ratioGeneration = (state: State) => state.browser.ratioGeneration;
 
+const keybinding = (state: State) => state.configuration.keybinding;
+
+export const aceKeybinding = createSelector(keybinding, (k) => k === 'ace' ? null : k);
+
 export const aceResizeKey = createSelector(
   focus,
   ratioGeneration,
